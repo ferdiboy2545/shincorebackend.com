@@ -1,17 +1,30 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+header("Content-Type: application/json");
+
+include "config.php";
+
+/* CEK DB */
+if (!isset($conn) || $conn->connect_error) {
   echo json_encode([
     "status" => "error",
-    "message" => "Akses tidak valid"
+    "message" => "Database tidak connect"
   ]);
   exit;
 }
 
-include "config.php";
+/* CEK METHOD */
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  echo json_encode([
+    "status" => "error",
+    "message" => "Gunakan POST"
+  ]);
+  exit;
+}
 
+/* DATA */
 $game      = $_POST['game'] ?? '';
 $player_id = $_POST['player_id'] ?? '';
 $diamond   = $_POST['diamond'] ?? '';
@@ -25,6 +38,7 @@ if(!$game || !$player_id || !$diamond || !$payment){
   exit;
 }
 
+/* PRICE */
 $priceList = [
   100 => 15000,
   200 => 28000,
@@ -36,7 +50,7 @@ $price = $priceList[$diamond] ?? 0;
 
 $order_id = "ORDER-" . time() . rand(100,999);
 
-/* SIMPAN KE DATABASE (TANPA MIDTRANS) */
+/* INSERT */
 $query = mysqli_query($conn, "
 INSERT INTO orders 
 (order_id, game, player_id, diamond, payment, price, status)
@@ -45,15 +59,14 @@ VALUES
 ");
 
 if($query){
-    echo json_encode([
-        "status" => "success",
-        "message" => "Order berhasil dibuat",
-        "order_id" => $order_id
-    ]);
+  echo json_encode([
+    "status" => "success",
+    "message" => "Order berhasil dibuat",
+    "order_id" => $order_id
+  ]);
 }else{
-    echo json_encode([
-        "status" => "error",
-        "message" => "DB ERROR: " . mysqli_error($conn)
-    ]);
+  echo json_encode([
+    "status" => "error",
+    "message" => mysqli_error($conn)
+  ]);
 }
-?>
