@@ -12,10 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 include "config.php";
 
-$game      = $_POST['game'];
-$player_id = $_POST['player_id'];
-$diamond   = $_POST['diamond'];
-$payment   = $_POST['payment'];
+$game      = $_POST['game'] ?? '';
+$player_id = $_POST['player_id'] ?? '';
+$diamond   = $_POST['diamond'] ?? '';
+$payment   = $_POST['payment'] ?? '';
+
+if(!$game || !$player_id || !$diamond || !$payment){
+  echo json_encode([
+    "status" => "error",
+    "message" => "Data tidak lengkap"
+  ]);
+  exit;
+}
 
 $priceList = [
   100 => 15000,
@@ -45,7 +53,7 @@ if($query){
 }else{
     echo json_encode([
         "status" => "error",
-        "message" => "Gagal simpan ke database"
+        "message" => "DB ERROR: " . mysqli_error($conn)
     ]);
 }
 ?>
